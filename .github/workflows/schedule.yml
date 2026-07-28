@@ -1,0 +1,16 @@
+name: Stock Analysis Scheduler
+
+on:
+  schedule:
+    - cron: '30 0 * * *'
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  trigger_stock_analysis:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Trigger Stock Analysis
+      run: |
+        curl -X GET "https://lertrit.pythonanywhere.com/test"
