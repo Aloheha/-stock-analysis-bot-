@@ -10,8 +10,8 @@ import yfinance as yf
 app = Flask(__name__)
 
 # ===================== Config =====================
-LINE_TOKEN = "YOUR_LINE_CHANNEL_ACCESS_TOKEN"
-CHAT_ID = "YOUR_CHAT_ID"
+LINE_TOKEN = "BPcmBZEV3nR2ZKYyRlQfXQ1rHCokbTfRNJt/bWx4CrxzmgLuExbmgMaMR2Pxe1A0KAy7ePwYjeoJKkRbd1H5LkaA4LdPbLHDFAIXBXc/UPB2Bj89AWcbE2a2vyb+hxRKbhlTFh7ACCxe9JPc4BlyIgdB04t89/1O/w1cDnyilFU="
+CHAT_ID = "Uf67badb4167a1b100e7c402099bef0a7"
 
 # ===================== Send Line =====================
 def send_line(message):
