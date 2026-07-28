@@ -5,13 +5,13 @@ import threading
 import time
 from datetime import datetime
 import requests
-import yfinance as yf
+
 
 app = Flask(__name__)
 
 # ===================== Config =====================
 LINE_TOKEN = "BPcmBZEV3nR2ZKYyRlQfXQ1rHCokbTfRNJt/bWx4CrxzmgLuExbmgMaMR2Pxe1A0KAy7ePwYjeoJKkRbd1H5LkaA4LdPbLHDFAIXBXc/UPB2Bj89AWcbE2a2vyb+hxRKbhlTFh7ACCxe9JPc4BlyIgdB04t89/1O/w1cDnyilFU="
-CHAT_ID = "Uf67badb4167a1b100e7c402099bef0a7"
+USER_ID = "Uf67badb4167a1b100e7c402099bef0a7"
 
 # ===================== Send Line =====================
 def send_line(message):
@@ -22,7 +22,7 @@ def send_line(message):
         "Content-Type": "application/json"
     }
     data = {
-        "to": CHAT_ID,
+        "to": USER_ID,
         "messages": [{"type": "text", "text": message}]
     }
     try:
@@ -34,81 +34,7 @@ def send_line(message):
     except Exception as e:
         print(f"❌ Error: {str(e)}")
 
-# ===================== Analyze Stock =====================
-def analyze_stock(symbol, market='SET'):
-    """วิเคราะห์หุ้น"""
-    try:
-        if market == 'SET':
-            full_symbol = f"{symbol}.BK"
-        else:
-            full_symbol = symbol
-        
-        data = yf.download(full_symbol, period='100d', progress=False)
-        
-        if data.empty:
-            return None
-        
-        current_price = data['Close'].iloc[-1]
-        prev_price = data['Close'].iloc[-2]
-        change_pct = ((current_price - prev_price) / prev_price) * 100
-        
-        sma20 = data['Close'].rolling(20).mean().iloc[-1]
-        sma50 = data['Close'].rolling(50).mean().iloc[-1]
-        sma200 = data['Close'].rolling(200).mean().iloc[-1]
-        
-        delta = data['Close'].diff()
-        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-        rs = gain / loss
-        rsi = 100 - (100 / (1 + rs))
-        rsi_val = rsi.iloc[-1]
-        
-        ema12 = data['Close'].ewm(span=12).mean()
-        ema26 = data['Close'].ewm(span=26).mean()
-        macd = ema12 - ema26
-        signal = macd.ewm(span=9).mean()
-        macd_val = macd.iloc[-1]
-        
-        if sma20 > sma50 > sma200:
-            trend = "⬆️ UPTREND"
-        elif sma20 < sma50 < sma200:
-            trend = "⬇️ DOWNTREND"
-        else:
-            trend = "➡️ SIDEWAYS"
-        
-        support = data['Low'].tail(20).min()
-        resistance = data['High'].tail(20).max()
-        
-        avg_vol = data['Volume'].tail(20).mean()
-        current_vol = data['Volume'].iloc[-1]
-        vol_ratio = current_vol / avg_vol
-        
-        if vol_ratio > 1.5:
-            volume_signal = "🔴 Very High"
-        elif vol_ratio > 1.2:
-            volume_signal = "🟠 High"
-        else:
-            volume_signal = "🟡 Normal"
-        
-        return {
-            'symbol': symbol,
-            'market': market,
-            'price': round(current_price, 2),
-            'change': round(change_pct, 2),
-            'trend': trend,
-            'sma20': round(sma20, 2),
-            'sma50': round(sma50, 2),
-            'sma200': round(sma200, 2),
-            'rsi': round(rsi_val, 2),
-            'macd': round(macd_val, 3),
-            'support': round(support, 2),
-            'resistance': round(resistance, 2),
-            'volume': volume_signal,
-        }
-    except Exception as e:
-        print(f"❌ Error analyzing {symbol}: {str(e)}")
-        return None
-
+    
 # ===================== Generate Report =====================
 def generate_report():
     """สร้างรายงานและส่ง Line"""
@@ -126,33 +52,8 @@ def generate_report():
 
 🇹🇭 SET100:
 """
-    
-    for stock in set_stocks:
-        result = analyze_stock(stock, 'SET')
-        if result:
-            report += f"""
-{result['symbol']}: ฿{result['price']} ({result['change']:+.1f}%)
-  Trend: {result['trend']} | RSI: {result['rsi']} | MACD: {result['macd']}
-  SMA: {result['sma20']}/{result['sma50']}/{result['sma200']}
-  S/R: ฿{result['support']}/฿{result['resistance']}
-  Vol: {result['volume']}
-"""
-    
-    report += "\n🇺🇸 S&P500:\n"
-    
-    for stock in sp_stocks:
-        result = analyze_stock(stock, 'US')
-        if result:
-            report += f"""
-{result['symbol']}: ${result['price']} ({result['change']:+.1f}%)
-  Trend: {result['trend']} | RSI: {result['rsi']} | MACD: {result['macd']}
-  SMA: {result['sma20']}/{result['sma50']}/{result['sma200']}
-  S/R: ${result['support']}/{result['resistance']}
-  Vol: {result['volume']}
-"""
-    
-    report += "\n✅ Report sent!"
-    
+    report += "\n🇺🇸 S&P500:\n"   
+    report += "\n✅ Report sent!" 
     print(report)
     send_line(report)
 
